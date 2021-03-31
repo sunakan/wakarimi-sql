@@ -1,0 +1,21 @@
+---
+
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: pass
+  client:
+    image: postgres:13
+    command: bash
+    working_dir: /var/local/app/
+    depends_on:
+      - db
+    volumes:
+      - type: bind
+        source: ${PWD}/
+        target: /var/local/app/
+    environment:
+      PGPASSFILE: /var/local/app/pgpass
