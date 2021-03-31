@@ -1,1 +1,8 @@
 = wakarimi
+
+.実行
+----
+$ make bash
+コンテナの中
+$ sh main.sh
+----

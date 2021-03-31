@@ -19,6 +19,7 @@ createdb -h ${DB_HOST} -U postgres -O ${DB_USER} -E UTF8 --locale=C -T template0
 psql -h ${DB_HOST} -U postgres -l
 
 # create members table
+psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table members;' || echo 'ok'
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -f ./create-members-table.sql
 # insert test data
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into members(id, name, height, gender) values (101, 'エレン',   170, 'M');"
@@ -30,7 +31,28 @@ psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into members(id, name,
 # select
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "select * from members order by id"
 
+# group by
+psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "select gender, to_char(avg(height), '999.99') from members group by gender;"
 
+
+# '5.11 1'
+echo '====[ 5.11 1 ]'
+readonly query5_11_1="select gender, count(id), to_char(avg(height), '999.99') from members group by gender;"
+psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query5_11_1}"
+# 5.11 2
+echo '====[ 5.11 2 ]'
+readonly query5_11_2="select gender, max(height), min(height), max(height)-min(height) from members group by gender order by gender desc;"
+psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query5_11_2}"
+# 5.11 3
+echo '====[ 5.11 3 ]'
+readonly query5_11_3_1="select count(gender) from members group by gender having gender = 'M';"
+readonly query5_11_3_2="select count(gender) from members where gender = 'M';"
+psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query5_11_3_1}"
+psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query5_11_3_2}"
+echo 'group byとhaving byを使った場合、男女両方を集計している（女子は集計不要なのに）'
+echo 'なので、パフォーマンス的にはwhereを使ったほうが高速'
+# 5.11 4
+echo '====[ 5.11 4 ]'
 
 # drop table
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table members;'
