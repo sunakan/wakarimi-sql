@@ -3,7 +3,7 @@
 ################################################################################
 .PHONY: up
 up: ## docker-compose up
-	docker-compose up
+	docker-compose up db
 
 .PHONY: down
 down: ## docker-compose down
