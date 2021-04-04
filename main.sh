@@ -30,12 +30,10 @@ psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into members(id, name,
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into members(id, name, height, gender) values (104, 'ジャン',   175, 'M');"
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into members(id, name, height, gender) values (105, 'サシャ',   168, 'F');"
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into members(id, name, height, gender) values (106, 'コニー',   158, 'M');"
-# select
-psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "select * from members order by id"
-
-# group by
-psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "select gender, to_char(avg(height), '999.99') from members group by gender;"
-
+## select
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "select * from members order by id"
+## group by
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "select gender, to_char(avg(height), '999.99') from members group by gender;"
 ## create charcters table
 #psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -f ./create-movies-table-and-characters-table.sql
 ## insert test data
@@ -199,32 +197,125 @@ psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "select gender, to_char(avg(he
 #echo "====After index, index only scan"
 #psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "explain select name from testmembers where name = 'メンバー#1000000';"
 #echo "================="
+#
+#
+## 15.8 1
+#echo '====[ 15.8 1.1 ]'
+#readonly query15_8_1_1="select gender, count(*) from members group by gender order by gender desc;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_1_1}"
+#
+#echo '====[ 15.8 1.2 ]'
+#readonly query15_8_1_2="select sum((gender = 'M')::integer) as \"M\", sum((gender = 'F')::integer) as \"F\" from members;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_1_2}"
+#
+## 15.8 2
+#echo '====[ 15.8 2.1 ]'
+#readonly query15_8_2_1="select case when height < 160 then '160cm未満' when height < 170 then '160～170cm' when 170 <= height then '170cm以上' else null end as category, count(*) from members group by category;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_2_1}"
+#echo '====[ 15.8 2.2 ]'
+#readonly query15_8_2_2="select sum((height<160)::integer) as \"160cm未満\", sum((160<=height and height<170)::integer) as \"160～170cm\", sum((170<=height)::integer) as \"170cm以上\"  from members;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_2_2}"
+#
+## 15.8 3
+#echo '====[ 15.8 3.1 ]'
+#readonly query15_8_3_1="select case when height < 160 then '160cm未満' when height < 170 then '160～170cm' when 170 <= height then '170cm以上' else null end as category, count(*), sum((gender = 'M')::integer) as \"M\", sum((gender = 'F')::integer) as \"F\" from members group by category;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_3_1}"
+#echo '====[ 15.8 3.2 ]'
+#readonly query15_8_3_2="select gender, sum((height < 160)::integer) as \"160cm未満\", sum((160<=height and height<170)::integer) as \"160～170cm\", sum((170 <= height)::integer) as \"170cm以上\" from members group by gender;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_3_2}"
+#
+## 16
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table test_scores;' || echo 'ok'
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table students;'    || echo 'ok'
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -f ./create-students-table-and-test-scores-table.sql
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into students (id, name, gender, class) values (201, 'さくら　ももこ',   'F', '3-4');"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into students (id, name, gender, class) values (202, 'はなわ　かずひこ', 'M', '3-4');"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into students (id, name, gender, class) values (203, 'ほなみ　たまえ',   'F', '3-4');"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into students (id, name, gender, class) values (204, 'まるお　すえお',   'M', '3-4');"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (201, '国語', 60);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (201, '算数', 40);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (201, '理科', 40);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (201, '社会', 50);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (202, '国語', 60);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (202, '算数', 70);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (202, '理科', 50);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (202, '社会', 70);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (203, '国語', 80);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (203, '算数', 80);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (203, '理科', 70);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (203, '社会', 100);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (204, '国語', 80);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (204, '算数', 90);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (204, '理科', 100);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into test_scores (student_id, subject, score) values (204, '社会', 100);"
+#echo '====[ 16.7 1 a ]'
+#readonly query16_7_1_a="select t.student_id, t.score from test_scores as t where t.subject = '算数' and t.student_id in (select s.id from students as s where s.gender = 'F');"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query16_7_1_a}"
+#echo '====[ 16.7 1 b ]'
+#readonly query16_7_1_b="select t.student_id, t.score from test_scores as t where t.subject = '算数' and 'F' = (select gender from students as s where s.id = t.student_id ) order by t.student_id;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query16_7_1_b}"
+#echo '====[ 16.7 1 c ]'
+#readonly query16_7_1_c="select s.id as student_id, (select t.score from test_scores as t where t.student_id = s.id and t.subject = '算数') as score from students as s where s.gender = 'F' order by s.id;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query16_7_1_c}"
+#echo '====[ 16.7 1 d ]'
+#readonly query16_7_1_d="select t.student_id, t.score from students as s left outer join test_scores as t on t.student_id = s.id where s.gender = 'F' and t.subject = '算数' order by s.id;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query16_7_1_d}"
+#
+## window関数
+### ある行と関連する他の行を使って計算や操作が行える機能
+## 名前順、そして順番をつける
+#readonly query18_1_1="select *, row_number() over (order by name) from members order by name"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_1_1}"
+## 身長が高い順、そして順番をつける
+#readonly query18_1_2="select *, rank() over (order by height desc) from members order by height desc"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_1_2}"
+## 男女別に身長の高い順に並べて、身長を累計
+#readonly query18_1_3="select *, sum(height) over (partition by gender order by height desc, id) from members order by gender desc, height desc;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_1_3}"
+## 男女別に身長の高い順に並べて、前の行との身長差を計算
+#readonly query18_1_4="select *, m.height - lag(m.height, 1) over (partition by m.gender order by m.height) as diff from members as m;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_1_4}"
+## 男女別に身長の高い順に並べて、身長を累計
+## order byを消したときのウィンドウフレームは最終行まで
+#readonly query18_1_5="select *, sum(height) over (partition by gender) from members order by gender desc, height desc;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_1_5}"
+## 男女別と全体の、身長の累計を計算するウィンドウ関数
+#readonly query18_1_6="select *, sum(height) over (partition by gender order by height, id) as \"男女別身長累計\", sum(height) over (order by height, id) as \"全体身長累計\" from members;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_1_6}"
+## 男女別の身長の、最大値と最小値を表示（もったいない版:2回over句やってる）
+#readonly query18_1_7="select *, max(height) over (partition by gender) as max, min(height) over (partition by gender) as min from members;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_1_7}"
+## 男女別の身長の、最大値と最小値を表示（最適化版:over句の共有化）
+#readonly query18_1_8="select *, max(height) over par_gender as max, min(height) over par_gender as min from members window par_gender as (partition by gender);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_1_8}"
+## window ウィンドウ名 as (partition by ... order by ...)
+## 18.10 1
+#echo '====[ 18.10 1 ]'
+#readonly query18_10_1="select *, to_char(avg(height) over par_gender, '999.99') as avg, to_char(height-(avg(height) over par_gender), '999.99') as diff from members over window par_gender as (partition by gender) order by gender desc, id;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_10_1}"
+## 18.10 2
+#echo '====[ 18.10 2 1 ]'
+#readonly query18_10_2_1="select m.* from (select *, rank() over ord_height as rank from members window ord_height as (order by height desc)) as m where m.rank <= 2;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_10_2_1}"
+#echo '====[ 18.10 2 2 ]'
+#readonly query18_10_2_2="select m.* from (select *, rank() over par_gender_ord_height as rank from members window par_gender_ord_height as (partition by gender order by height desc)) as m where m.rank <= 2 order by m.gender desc, m.rank, m.id;"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query18_10_2_2}"
+#
+## 20.2
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table sos_brigade;' || echo 'ok'
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -f ./create-sos-brigade-table.sql
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into sos_brigade (id, name, memo, boss_id) values (101, 'ハルヒ', '団長',     null);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into sos_brigade (id, name, memo, boss_id) values (102, '古泉',   '超能力者', 101);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into sos_brigade (id, name, memo, boss_id) values (103, 'みくる', '未来人',   101);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into sos_brigade (id, name, memo, boss_id) values (104, 'キョン', '一般人',   102);"
+#psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "insert into sos_brigade (id, name, memo, boss_id) values (105, '有希',   '宇宙人',   101);"
 
 
-# 15.8 1
-echo '====[ 15.8 1.1 ]'
-readonly query15_8_1_1="select gender, count(*) from members group by gender order by gender desc;"
-psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_1_1}"
 
-echo '====[ 15.8 1.2 ]'
-readonly query15_8_1_2="select sum((gender = 'M')::integer) as \"M\", sum((gender = 'F')::integer) as \"F\" from members;"
-psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_1_2}"
 
-# 15.8 2
-echo '====[ 15.8 2.1 ]'
-readonly query15_8_2_1="select case when height < 160 then '160cm未満' when height < 170 then '160～170cm' when 170 <= height then '170cm以上' else null end as category, count(*) from members group by category;"
-psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_2_1}"
-echo '====[ 15.8 2.2 ]'
-readonly query15_8_2_2="select sum((height<160)::integer) as \"160cm未満\", sum((160<=height and height<170)::integer) as \"160～170cm\", sum((170<=height)::integer) as \"170cm以上\"  from members;"
-psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_2_2}"
 
-# 15.8 3
-echo '====[ 15.8 3.1 ]'
-readonly query15_8_3_1="select case when height < 160 then '160cm未満' when height < 170 then '160～170cm' when 170 <= height then '170cm以上' else null end as category, count(*), sum((gender = 'M')::integer) as \"M\", sum((gender = 'F')::integer) as \"F\" from members group by category;"
-psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_3_1}"
-echo '====[ 15.8 3.2 ]'
-readonly query15_8_3_2="select gender, sum((height < 160)::integer) as \"160cm未満\", sum((160<=height and height<170)::integer) as \"160～170cm\", sum((170 <= height)::integer) as \"170cm以上\" from members group by gender;"
-psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c "${query15_8_3_2}"
+
+
 
 # drop table
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table members;'     || echo 'ok'
@@ -237,3 +328,6 @@ psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table writings;'    || e
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table authors;'     || echo 'ok'
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table books;'       || echo 'ok'
 psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table testmembers;' || echo 'ok'
+psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table test_scores;' || echo 'ok'
+psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table students;'    || echo 'ok'
+psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c 'drop table sos_brigade;' || echo 'ok'
